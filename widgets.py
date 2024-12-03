@@ -6,7 +6,7 @@ from git.util import get_user_id
 from streamlit_option_menu import option_menu
 from streamlit_cookies_manager import EncryptedCookieManager
 
-from db.db import verify_user, unique_email_in_db, check_user_in_db, add_user_to_db, get_user_role
+from db.db import Database
 from utils import check_valid_name, check_valid_email
 
 
@@ -22,6 +22,7 @@ class __login__:
         1. logout_button_name : The logout button name.
         """
         self.logout_button_name = logout_button_name
+        self.db = Database()
 
         self.cookies = EncryptedCookieManager(
         prefix="streamlit_login_ui_yummy_cookies",
@@ -43,7 +44,7 @@ class __login__:
                     if fetched_cookies['__streamlit_login_signup_ui_username__'] != '1c9a923f-fb21-4a91-b3f3-5f18e3f01182':
                         st.session_state['LOGGED_IN'] = True
                         st.session_state['LOGGED_USER'] = self.cookies.get('__streamlit_login_signup_ui_username__')
-                        st.session_state['ROLE'] = get_user_role(st.session_state['LOGGED_USER'])
+                        st.session_state['ROLE'] = self.db.get_user_role(st.session_state['LOGGED_USER'])
 
 
         if not st.session_state['LOGGED_IN']:
@@ -58,7 +59,7 @@ class __login__:
                 login_submit_button = st.form_submit_button(label = 'Login')
 
                 if login_submit_button:
-                    authenticate_user_check, role = verify_user(username, password)
+                    authenticate_user_check, role = self.db.verify_user(username, password)
 
                     if not authenticate_user_check:
                         st.error("Invalid Username or Password!")
@@ -82,10 +83,10 @@ class __login__:
 
             email_sign_up = st.text_input("Email *", placeholder = 'Please enter your email')
             valid_email_check = check_valid_email(email_sign_up)
-            unique_email_check = unique_email_in_db(email_sign_up)
+            unique_email_check = self.db.unique_email_in_db(email_sign_up)
             
             username_sign_up = st.text_input("Username *", placeholder = 'Enter a unique username')
-            unique_username_check = check_user_in_db(username_sign_up)
+            unique_username_check = self.db.check_user_in_db(username_sign_up)
 
             password_sign_up = st.text_input("Password *", placeholder = 'Create a strong password', type = 'password')
 
@@ -112,7 +113,7 @@ class __login__:
                     if valid_email_check:
                         if unique_email_check:
                             if unique_username_check:
-                                add_user_to_db(email=email_sign_up,
+                                self.db.add_user_to_db(email=email_sign_up,
                                                name=name_sign_up,
                                                username=username_sign_up,
                                                password=password_sign_up)
@@ -126,7 +127,7 @@ class __login__:
         st.error("Not supported yet!")
         with st.form("Forgot Password Form"):
             email_forgot_passwd = st.text_input("Email", placeholder= 'Please enter your email')
-            email_exists_check = unique_email_in_db(email_forgot_passwd)
+            email_exists_check = self.db.unique_email_in_db(email_forgot_passwd)
 
             st.markdown("###")
             forgot_passwd_submit_button = st.form_submit_button(label = 'Get Password')
@@ -150,7 +151,7 @@ class __login__:
         st.error("Not supported yet!")
         with st.form("Reset Password Form"):
             email_reset_passwd = st.text_input("Email", placeholder= 'Please enter your email')
-            email_exists_check, username_reset_passwd = unique_email_in_db(email_reset_passwd)
+            email_exists_check, username_reset_passwd = self.db.unique_email_in_db(email_reset_passwd)
 
             current_passwd = st.text_input("Temporary Password", placeholder= 'Please enter the password you received in the email')
             # current_passwd_check = check_current_passwd(email_reset_passwd, current_passwd)

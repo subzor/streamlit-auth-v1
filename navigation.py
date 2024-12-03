@@ -21,8 +21,8 @@ def make_sidebar():
         st.write("")
 
         if st.session_state.get("LOGGED_IN", False):
-            st.page_link("pages/page1.py", label="Secret Company Stuff", icon="🔒")
-            st.page_link("pages/page2.py", label="More Secret Stuff", icon="🕵️")
+            st.page_link("pages/dashboard.py", label="Secret Company Stuff", icon="🔒")
+            st.page_link("pages/settings.py", label="More Secret Stuff", icon="🕵️")
 
             st.write("")
             st.write("")
