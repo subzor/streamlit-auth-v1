@@ -133,6 +133,7 @@ class __login__:
         Creates the forgot password widget and after user authentication (email), triggers an email to the user 
         containing a random password.
         """
+        st.error("Not supported yet!")
         with st.form("Forgot Password Form"):
             email_forgot_passwd = st.text_input("Email", placeholder= 'Please enter your email')
             email_exists_check, username_forgot_passwd = check_email_exists(email_forgot_passwd)
@@ -147,7 +148,7 @@ class __login__:
                 if email_exists_check:
                     random_password = generate_random_passwd()
                     # send_passwd_in_email(self.auth_token, username_forgot_passwd, email_forgot_passwd, self.company_name, random_password)
-                    change_passwd(email_forgot_passwd, random_password)
+                    # change_passwd(email_forgot_passwd, random_password)
                     st.success("Secure Password Sent Successfully!")
 
     def reset_password(self) -> None:
@@ -155,6 +156,7 @@ class __login__:
         Creates the reset password widget and after user authentication (email and the password shared over that email), 
         resets the password and updates the same in the _secret_auth_.json file.
         """
+        st.error("Not supported yet!")
         with st.form("Reset Password Form"):
             email_reset_passwd = st.text_input("Email", placeholder= 'Please enter your email')
             email_exists_check, username_reset_passwd = check_email_exists(email_reset_passwd)
@@ -254,7 +256,5 @@ class __login__:
 
         return st.session_state['LOGGED_IN']
 
-# Author: Gauri Prabhakar
-# GitHub: https://github.com/GauriSP10/streamlit_login_auth_ui
 
 
