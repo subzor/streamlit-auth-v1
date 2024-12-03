@@ -1,9 +1,12 @@
 import streamlit as st
 from time import sleep
+
+from db.db import init_db
 from navigation import make_sidebar
 from widgets import __login__
 
 
+init_db()
 
 st.title("Welcome to Diamond Corp")
 

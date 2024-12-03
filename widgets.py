@@ -4,8 +4,8 @@ import os
 from streamlit_option_menu import option_menu
 from streamlit_cookies_manager import EncryptedCookieManager
 
-from utils import check_usr_pass, check_valid_name, check_valid_email, check_unique_email, \
-    check_unique_usr, register_new_usr, check_email_exists, generate_random_passwd, change_passwd, check_current_passwd
+from db.db import verify_user, unique_email_in_db, check_user_in_db, add_user_to_db
+from utils import check_valid_name, check_valid_email
 
 
 class __login__:
@@ -73,13 +73,14 @@ class __login__:
                 login_submit_button = st.form_submit_button(label = 'Login')
 
                 if login_submit_button:
-                    authenticate_user_check = check_usr_pass(username, password)
+                    authenticate_user_check, role = verify_user(username, password)
 
                     if not authenticate_user_check:
                         st.error("Invalid Username or Password!")
 
                     else:
                         st.session_state['LOGGED_IN'] = True
+                        st.session_state['ROLE'] = role
                         self.cookies['__streamlit_login_signup_ui_username__'] = username
                         self.cookies.save()
                         del_login.empty()
@@ -87,7 +88,7 @@ class __login__:
 
     def sign_up_widget(self) -> None:
         """
-        Creates the sign-up widget and stores the user info in a secure way in the _secret_auth_.json file.
+        Creates the sign-up widget and stores the user info in a secure way in the users.db file.
         """
         with st.form("Sign Up Form"):
             name_sign_up = st.text_input("Name *", placeholder = 'Please enter your name')
@@ -95,10 +96,10 @@ class __login__:
 
             email_sign_up = st.text_input("Email *", placeholder = 'Please enter your email')
             valid_email_check = check_valid_email(email_sign_up)
-            unique_email_check = check_unique_email(email_sign_up)
+            unique_email_check = unique_email_in_db(email_sign_up)
             
             username_sign_up = st.text_input("Username *", placeholder = 'Enter a unique username')
-            unique_username_check = check_unique_usr(username_sign_up)
+            unique_username_check = check_user_in_db(username_sign_up)
 
             password_sign_up = st.text_input("Password *", placeholder = 'Create a strong password', type = 'password')
 
@@ -125,7 +126,10 @@ class __login__:
                     if valid_email_check:
                         if unique_email_check:
                             if unique_username_check:
-                                register_new_usr(name_sign_up, email_sign_up, username_sign_up, password_sign_up)
+                                add_user_to_db(email=email_sign_up,
+                                               name=name_sign_up,
+                                               username=username_sign_up,
+                                               password=password_sign_up)
                                 st.success("Registration Successful!")
 
     def forgot_password(self) -> None:
@@ -136,33 +140,34 @@ class __login__:
         st.error("Not supported yet!")
         with st.form("Forgot Password Form"):
             email_forgot_passwd = st.text_input("Email", placeholder= 'Please enter your email')
-            email_exists_check, username_forgot_passwd = check_email_exists(email_forgot_passwd)
+            email_exists_check = unique_email_in_db(email_forgot_passwd)
 
             st.markdown("###")
             forgot_passwd_submit_button = st.form_submit_button(label = 'Get Password')
 
             if forgot_passwd_submit_button:
-                if not email_exists_check:
-                    st.error("Email ID not registered with us!")
-
-                if email_exists_check:
-                    random_password = generate_random_passwd()
-                    # send_passwd_in_email(self.auth_token, username_forgot_passwd, email_forgot_passwd, self.company_name, random_password)
-                    # change_passwd(email_forgot_passwd, random_password)
-                    st.success("Secure Password Sent Successfully!")
+                st.write("Email exists check: ", email_exists_check)
+            #     if not email_exists_check:
+            #         st.error("Email ID not registered with us!")
+            #
+            #     if email_exists_check:
+            #         random_password = generate_random_passwd()
+            #         # send_passwd_in_email(self.auth_token, username_forgot_passwd, email_forgot_passwd, self.company_name, random_password)
+            #         # change_passwd(email_forgot_passwd, random_password)
+            #         st.success("Secure Password Sent Successfully!")
 
     def reset_password(self) -> None:
         """
         Creates the reset password widget and after user authentication (email and the password shared over that email), 
-        resets the password and updates the same in the _secret_auth_.json file.
+        resets the password and updates the same in the users.db file.
         """
         st.error("Not supported yet!")
         with st.form("Reset Password Form"):
             email_reset_passwd = st.text_input("Email", placeholder= 'Please enter your email')
-            email_exists_check, username_reset_passwd = check_email_exists(email_reset_passwd)
+            email_exists_check, username_reset_passwd = unique_email_in_db(email_reset_passwd)
 
             current_passwd = st.text_input("Temporary Password", placeholder= 'Please enter the password you received in the email')
-            current_passwd_check = check_current_passwd(email_reset_passwd, current_passwd)
+            # current_passwd_check = check_current_passwd(email_reset_passwd, current_passwd)
 
             new_passwd = st.text_input("New Password", placeholder= 'Please enter a new, strong password', type = 'password')
 
@@ -175,16 +180,16 @@ class __login__:
                 if not email_exists_check:
                     st.error("Email does not exist!")
 
-                elif not current_passwd_check:
-                    st.error("Incorrect temporary password!")
+                # elif not current_passwd_check:
+                #     st.error("Incorrect temporary password!")
 
                 elif new_passwd != new_passwd_1:
                     st.error("Passwords don't match!")
             
                 if email_exists_check:
-                    if current_passwd_check:
-                        change_passwd(email_reset_passwd, new_passwd)
-                        st.success("Password Reset Successfully!")
+                    # if current_passwd_check:
+                    # change_passwd(email_reset_passwd, new_passwd)
+                    st.success("Password Reset Successfully!")
                 
 
     def logout_widget(self) -> None:
@@ -205,7 +210,7 @@ class __login__:
 
     def nav_sidebar(self):
         """
-        Creates the side navigaton bar
+        Creates the side navigation bar
         """
         main_page_sidebar = st.sidebar.empty()
         with main_page_sidebar:
@@ -228,12 +233,6 @@ class __login__:
 
         if 'LOGOUT_BUTTON_HIT' not in st.session_state:
             st.session_state['LOGOUT_BUTTON_HIT'] = False
-
-        auth_json_exists_bool = self.check_auth_json_file_exists('_secret_auth_.json')
-
-        if not auth_json_exists_bool:
-            with open("_secret_auth_.json", "w") as auth_json:
-                json.dump([], auth_json)
 
         main_page_sidebar, selected_option = self.nav_sidebar()
 

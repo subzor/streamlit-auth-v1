@@ -2,3 +2,4 @@ streamlit>=1.40.2
 streamlit-cookies-manager==0.2.0
 streamlit-option-menu==0.4.0
 argon2-cffi==23.1.0
+pandas~=2.2.3
