@@ -1,10 +1,12 @@
 import streamlit as st
 import json
 import os
+
+from git.util import get_user_id
 from streamlit_option_menu import option_menu
 from streamlit_cookies_manager import EncryptedCookieManager
 
-from db.db import verify_user, unique_email_in_db, check_user_in_db, add_user_to_db
+from db.db import verify_user, unique_email_in_db, check_user_in_db, add_user_to_db, get_user_role
 from utils import check_valid_name, check_valid_email
 
 
@@ -23,30 +25,10 @@ class __login__:
 
         self.cookies = EncryptedCookieManager(
         prefix="streamlit_login_ui_yummy_cookies",
-        password='9d68d6f2-4258-45c9-96eb-2d6bc74ddbb5-d8f49cab-edbb-404a-94d0-b25b1d4a564b')
+        password='9d68d6f2-4258-45c9-96eb-2d6bc74ddbb5-d8f49cab-edbb-404a-94d0-b25b1d4a564b_123123_asdas12')
 
         if not self.cookies.ready():
             st.stop()   
-
-    def check_auth_json_file_exists(self, auth_filename: str) -> bool:
-        """
-        Checks if the auth file (where the user info is stored) already exists.
-        """
-        file_names = []
-        for path in os.listdir('./'):
-            if os.path.isfile(os.path.join('./', path)):
-                file_names.append(path)
-
-        present_files = []
-        for file_name in file_names:
-            if auth_filename in file_name:
-                present_files.append(file_name)
-                    
-            present_files = sorted(present_files)
-            if len(present_files) > 0:
-                return True
-        return False
-
 
     def login_widget(self) -> None:
         """
@@ -60,6 +42,9 @@ class __login__:
                 if '__streamlit_login_signup_ui_username__' in fetched_cookies.keys():
                     if fetched_cookies['__streamlit_login_signup_ui_username__'] != '1c9a923f-fb21-4a91-b3f3-5f18e3f01182':
                         st.session_state['LOGGED_IN'] = True
+                        st.session_state['LOGGED_USER'] = self.cookies.get('__streamlit_login_signup_ui_username__')
+                        st.session_state['ROLE'] = get_user_role(st.session_state['LOGGED_USER'])
+
 
         if not st.session_state['LOGGED_IN']:
             st.session_state['LOGOUT_BUTTON_HIT'] = False 
@@ -81,6 +66,7 @@ class __login__:
                     else:
                         st.session_state['LOGGED_IN'] = True
                         st.session_state['ROLE'] = role
+                        st.session_state['LOGGED_USER'] = username
                         self.cookies['__streamlit_login_signup_ui_username__'] = username
                         self.cookies.save()
                         del_login.empty()

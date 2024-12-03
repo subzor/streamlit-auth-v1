@@ -113,6 +113,19 @@ def check_user_in_db(username):
 
     return True
 
+# Function to check if a username exists in the database
+def get_user_role(username):
+    try:
+        conn = sqlite3.connect('users.db')
+        cursor = conn.cursor()
+        cursor.execute("SELECT role FROM users WHERE username = ?", (username,))
+        result = cursor.fetchone()
+        conn.close()
+        return result[0] if result else None
+    except sqlite3.Error as e:
+        st.error(f"Database error: {e}")
+
+
 # Function to verify a user's credentials
 def verify_user(username: str, password: str):
     try:
