@@ -1,8 +1,4 @@
 import streamlit as st
-import json
-import os
-
-from git.util import get_user_id
 from streamlit_option_menu import option_menu
 from streamlit_cookies_manager import EncryptedCookieManager
 
@@ -10,7 +6,7 @@ from db.db import Database
 from utils import check_valid_name, check_valid_email
 
 
-class __login__:
+class LoginPage:
     """
     Builds the UI for the Login/ Sign Up page.
     """
@@ -191,7 +187,10 @@ class __login__:
             if logout_click_check:
                 st.session_state['LOGOUT_BUTTON_HIT'] = True
                 st.session_state['LOGGED_IN'] = False
+                st.session_state.update({'LOGGED_USER': None})
+                st.session_state.update({'ROLE': None})
                 self.cookies['__streamlit_login_signup_ui_username__'] = '1c9a923f-fb21-4a91-b3f3-5f18e3f01182'
+                self.cookies.save()
                 del_logout.empty()
                 st.rerun()
 

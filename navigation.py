@@ -1,5 +1,4 @@
 import streamlit as st
-from time import sleep
 from streamlit.runtime.scriptrunner import get_script_run_ctx
 from streamlit.source_util import get_pages
 
@@ -24,6 +23,8 @@ def make_sidebar():
             st.page_link("streamlit_app.py", label="Start", icon="🏠")
             st.page_link("pages/dashboard.py", label="Dashboard", icon="🕵️")
             st.page_link("pages/settings.py", label="Settings", icon="🔒")
+            if st.session_state.get("ROLE") == "admin":
+                st.page_link("pages/admin_panel.py", label="Admin Panel", icon="🔓")
 
             st.write("")
             st.write("")
