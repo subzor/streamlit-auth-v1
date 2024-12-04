@@ -1,3 +1,5 @@
+import time
+
 import streamlit as st
 
 from db.db import Database
@@ -7,7 +9,7 @@ from widgets import __login__
 db = Database()
 db.init_db()
 
-st.title("Welcome to Diamond Corp")
+st.title("Welcome to Sub Corp")
 
 __login__obj = __login__(logout_button_name = 'Logout')
 
@@ -17,6 +19,6 @@ st.session_state["LOGIN_OBJ"] = __login__obj
 
 make_sidebar()
 
-if LOGGED_IN:
-    st.switch_page("pages/dashboard.py")
+
+
 

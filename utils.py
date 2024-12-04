@@ -1,4 +1,5 @@
 import re
+import secrets
 
 
 def check_valid_name(name_sign_up: str) -> bool:
@@ -38,7 +39,12 @@ def non_empty_str_check(username_sign_up: str) -> bool:
         return False
     return True
 
-
+def generate_random_passwd() -> str:
+    """
+    Generates a random password to be sent in email.
+    """
+    password_length = 10
+    return secrets.token_urlsafe(password_length)
 
 
 

@@ -141,3 +141,95 @@ class Database:
         except sqlite3.Error as e:
             st.error(f"Database error: {e}")
             return []
+
+    def edit_user_role(self, username, role):
+        try:
+            conn = self._connect()
+            cursor = conn.cursor()
+            cursor.execute("UPDATE users SET role = ? WHERE username = ?", (role, username))
+            conn.commit()
+            conn.close()
+            return True
+        except sqlite3.Error as e:
+            st.error(f"Database error: {e}")
+            return False
+
+    def delete_user(self, username):
+        try:
+            conn = self._connect()
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM users WHERE username = ?", (username,))
+            conn.commit()
+            conn.close()
+            return True
+        except sqlite3.Error as e:
+            st.error(f"Database error: {e}")
+            return False
+
+    def update_password(self, username, password):
+        hashed_pwd = self.hash_password(password)
+        try:
+            conn = self._connect()
+            cursor = conn.cursor()
+            cursor.execute("UPDATE users SET password = ? WHERE username = ?", (hashed_pwd, username))
+            conn.commit()
+            conn.close()
+            return True
+        except sqlite3.Error as e:
+            st.error(f"Database error: {e}")
+            return False
+
+    def update_email(self, username, email):
+        try:
+            conn = self._connect()
+            cursor = conn.cursor()
+            cursor.execute("UPDATE users SET email = ? WHERE username = ?", (email, username))
+            conn.commit()
+            conn.close()
+            return True
+        except sqlite3.Error as e:
+            st.error(f"Database error: {e}")
+            return False
+
+    def update_name(self, username, name):
+        try:
+            conn = self._connect()
+            cursor = conn.cursor()
+            cursor.execute("UPDATE users SET name = ? WHERE username = ?", (name, username))
+            conn.commit()
+            conn.close()
+            return True
+        except sqlite3.Error as e:
+            st.error(f"Database error: {e}")
+            return False
+
+    def get_user_details(self, username):
+        try:
+            conn = self._connect()
+            cursor = conn.cursor()
+            cursor.execute("SELECT email, username, name, role FROM users WHERE username = ?", (username,))
+            result = cursor.fetchone()
+            conn.close()
+            data = {
+                "email": result[0],
+                "username": result[1],
+                "name": result[2],
+                "role": result[3]
+            }
+            return data
+        except sqlite3.Error as e:
+            st.error(f"Database error: {e}")
+            return None
+
+    def get_all_users(self):
+        try:
+            conn = self._connect()
+            cursor = conn.cursor()
+            cursor.execute("SELECT username FROM users")
+            users = cursor.fetchall()
+            conn.close()
+            return [user[0] for user in users]
+        except sqlite3.Error as e:
+            st.error(f"Database error: {e}")
+            return []
+

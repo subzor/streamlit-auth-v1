@@ -16,13 +16,14 @@ def get_current_page_name():
 
 def make_sidebar():
     with st.sidebar:
-        st.title("💎 Diamond Corp")
+        st.title("💎 Sub Corp")
         st.write("")
         st.write("")
 
         if st.session_state.get("LOGGED_IN", False):
-            st.page_link("pages/dashboard.py", label="Secret Company Stuff", icon="🔒")
-            st.page_link("pages/settings.py", label="More Secret Stuff", icon="🕵️")
+            st.page_link("streamlit_app.py", label="Start", icon="🏠")
+            st.page_link("pages/dashboard.py", label="Dashboard", icon="🕵️")
+            st.page_link("pages/settings.py", label="Settings", icon="🔒")
 
             st.write("")
             st.write("")
@@ -33,8 +34,3 @@ def make_sidebar():
             # redirect them to the login page
             st.switch_page("streamlit_app.py")
 
-# def logout():
-#     st.session_state.update("LOGGED_IN") = False
-#     st.info("Logged out successfully!")
-#     sleep(0.5)
-#     st.switch_page("streamlit_app.py")
