@@ -23,7 +23,6 @@ def admin_panel():
         st.dataframe(df)
 
 
-        st.markdown
 
 
         with st.form("Change user password"):
