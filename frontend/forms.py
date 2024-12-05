@@ -41,7 +41,7 @@ class SettingsForms:
     def change_name_form(self):
         with st.form("Change name", clear_on_submit=True):
             st.write("")
-            st.write(f"Old name: {self.user_data["name"]}")
+            st.write(f"Old name: {self.user_data['name']}")
             new_name = st.text_input("New name", value="")
             password = st.text_input("Password", type="password", value="")
 
@@ -64,7 +64,7 @@ class SettingsForms:
     def change_email_form(self):
         with st.form("Change email", clear_on_submit=True):
             st.write("")
-            st.write(f"Old email: {self.user_data["email"]}")
+            st.write(f"Old email: {self.user_data['email']}")
             new_email = st.text_input("New email", value="")
             password = st.text_input("Password", type="password", value="")
 
