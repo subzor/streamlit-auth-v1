@@ -14,6 +14,9 @@ class Forms:
         self.user_name = st.session_state.get("LOGGED_USER")
         self.user_data = self.db.get_user_details(self.user_name)
         self.users_data = self.db.get_all_users()
+        self.users_copy = self.users_data.copy()
+        self.users_copy.remove(self.user_name)
+
 
 
 class SettingsForms(Forms):
@@ -95,14 +98,16 @@ class SettingsForms(Forms):
 
 class AdminForms(Forms):
 
+    @staticmethod
+    def _user_changed():
+        return st.session_state.get("user_changed", False)
+
+
     def change_user_role(self):
-        def _user_changed():
-            return st.session_state.get("user_changed", False)
+        st.write("Change user role")
+        usr_name = st.selectbox("Username", self.users_copy, key="role", on_change=lambda: st.session_state.update(user_changed=True))
 
-        self.users_data.remove(self.user_name)
-
-        usr_name = st.selectbox("Username", self.users_data, on_change=lambda: st.session_state.update(user_changed=True))
-        if _user_changed():
+        if self._user_changed():
             usr_role = self.db.get_user_role(usr_name)
             user_roles = [usr_role] + [role for role in UserRoleType.list() if role != usr_role]
             new_role = st.selectbox("Role", user_roles)
@@ -116,14 +121,13 @@ class AdminForms(Forms):
                 st.error("Error changing role")
 
     def change_user_password(self):
-
         st.write("Change user password")
-        usr_name = st.text_input("Username")
+        usr_name = st.selectbox("Username", self.users_copy, key="pass", on_change=lambda: st.session_state.update(user_changed=True))
         new_password = st.text_input("New password", type="password")
-        if st.button("Change password"):
+        if st.button("Change password") and new_password != "":
             response = self.db.update_password(usr_name, new_password)
             if response:
-                st.write("Password changed successfully! :sunglasses:")
+                st.success("Password changed successfully! :sunglasses:")
                 sleep(2)
                 st.rerun()
             else:

@@ -21,8 +21,13 @@ def admin_panel():
     st.warning("Warning, superuser mode")
     if st.checkbox("I accept responsibility and understand this mode can be used to initialise and make changes to the authentication database"):
         st.write("You are now in superuser mode")
-        admin_forms.change_user_role()
-        admin_forms.change_user_password()
+
+        col_1, col_2 = st.columns(2)
+        st.session_state.update(user_changed=True)
+        with col_1:
+            admin_forms.change_user_role()
+        with col_2:
+            admin_forms.change_user_password()
 
 
 
