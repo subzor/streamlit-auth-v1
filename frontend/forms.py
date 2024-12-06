@@ -1,4 +1,3 @@
-from idlelib.configdialog import changes
 from time import sleep
 
 from db.db import Database
