@@ -111,7 +111,7 @@ class AdminForms(Forms):
             usr_role = self.db.get_user_role(usr_name)
             user_roles = [usr_role] + [role for role in UserRoleType.list() if role != usr_role]
             new_role = st.selectbox("Role", user_roles)
-        if st.button("Change role"):
+        if st.button("Change role") and usr_name:
             response = self.db.edit_user_role(usr_name, new_role)
             if response:
                 st.success("Role changed successfully! :sunglasses:")
@@ -133,6 +133,24 @@ class AdminForms(Forms):
             else:
                 st.error("Error changing password")
 
+    def delete_user(self):
+        st.write("Delete user")
+        usr_name = st.selectbox("Username", self.users_copy, key="del", on_change=lambda: st.session_state.update(user_changed=True))
+        col_1, col_2 = st.columns(2)
+        with col_1:
+            check = st.checkbox("Are you sure?")
+
+        if col_2.button("Delete user"):
+            if check and usr_name:
+                response = self.db.delete_user(usr_name)
+                if response:
+                    st.success("User deleted successfully! :sunglasses:")
+                    sleep(2)
+                    st.rerun()
+                else:
+                    st.error("Error deleting user")
+            else:
+                st.warning("Please confirm and select a user to delete")
 
 
 

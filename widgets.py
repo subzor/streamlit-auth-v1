@@ -233,8 +233,6 @@ class LoginPage:
 
         if selected_option == 'Reset Password':
             self.reset_password()
-        
-        # self.logout_widget()
 
         if st.session_state['LOGGED_IN']:
             main_page_sidebar.empty()
