@@ -1,3 +1,4 @@
+from imp import new_module
 from time import sleep
 
 from db.db import Database
@@ -99,38 +100,42 @@ class AdminForms(Forms):
 
     @staticmethod
     def _user_changed():
-        return st.session_state.get("user_changed", False)
-
+        st.session_state.selected_role = ""
 
     def change_user_role(self):
         st.write("Change user role")
-        usr_name = st.selectbox("Username", self.users_copy, key="role", on_change=lambda: st.session_state.update(user_changed=True))
+        usr_name = st.selectbox("Username", self.users_copy, key="role", on_change=self._user_changed)
 
-        if self._user_changed():
-            usr_role = self.db.get_user_role(usr_name)
-            user_roles = [usr_role] + [role for role in UserRoleType.list() if role != usr_role]
-            new_role = st.selectbox("Role", user_roles)
-        if st.button("Change role") and usr_name:
-            response = self.db.edit_user_role(usr_name, new_role)
-            if response:
-                st.success("Role changed successfully! :sunglasses:")
-                sleep(2)
-                st.rerun()
+        user_roles = [""] + UserRoleType.list()
+
+        new_role = st.selectbox("New role", user_roles, key="selected_role")
+        if st.button("Change role"):
+            if usr_name and new_role != "":
+                response = self.db.edit_user_role(usr_name, new_role)
+                if response:
+                    st.success("Role changed successfully! :sunglasses:")
+                    sleep(2)
+                    st.rerun()
+                else:
+                    st.error("Error changing role")
             else:
-                st.error("Error changing role")
+                st.warning("Please select user and a role")
 
     def change_user_password(self):
         st.write("Change user password")
         usr_name = st.selectbox("Username", self.users_copy, key="pass", on_change=lambda: st.session_state.update(user_changed=True))
         new_password = st.text_input("New password", type="password")
-        if st.button("Change password") and new_password != "":
-            response = self.db.update_password(usr_name, new_password)
-            if response:
-                st.success("Password changed successfully! :sunglasses:")
-                sleep(2)
-                st.rerun()
+        if st.button("Change password"):
+            if new_password != "":
+                response = self.db.update_password(usr_name, new_password)
+                if response:
+                    st.success("Password changed successfully! :sunglasses:")
+                    sleep(2)
+                    st.rerun()
+                else:
+                    st.error("Error changing password")
             else:
-                st.error("Error changing password")
+                st.warning("Password cannot be empty")
 
     def delete_user(self):
         st.write("Delete user")

@@ -1,9 +1,11 @@
+from time import sleep
+
 import streamlit as st
 from streamlit_option_menu import option_menu
 from streamlit_cookies_manager import EncryptedCookieManager
 
 from db.db import Database
-from utils import check_valid_name, check_valid_email
+from src.utils import check_valid_name, check_valid_email, validate_password
 
 
 class LoginPage:
@@ -85,7 +87,7 @@ class LoginPage:
             unique_username_check = self.db.check_user_in_db(username_sign_up)
 
             password_sign_up = st.text_input("Password *", placeholder = 'Create a strong password', type = 'password')
-
+            strong_password = validate_password(password_sign_up)
             st.markdown("###")
             sign_up_submit_button = st.form_submit_button(label = 'Register')
 
@@ -98,82 +100,23 @@ class LoginPage:
                 
                 elif not unique_email_check:
                     st.error("Email already exists!")
-                
-                elif not unique_username_check:
-                    st.error(f'Sorry, username {username_sign_up} already exists!')
-                
+
                 elif unique_username_check is None:
                     st.error('Please enter a non - empty Username!')
 
-                if valid_name_check:
-                    if valid_email_check:
-                        if unique_email_check:
-                            if unique_username_check:
-                                self.db.add_user_to_db(email=email_sign_up,
-                                               name=name_sign_up,
-                                               username=username_sign_up,
-                                               password=password_sign_up)
-                                st.success("Registration Successful!")
+                elif not unique_username_check:
+                    st.error(f'Sorry, username {username_sign_up} already exists!')
 
-    def forgot_password(self) -> None:
-        """
-        Creates the forgot password widget and after user authentication (email), triggers an email to the user 
-        containing a random password.
-        """
-        st.error("Not supported yet!")
-        with st.form("Forgot Password Form"):
-            email_forgot_passwd = st.text_input("Email", placeholder= 'Please enter your email')
-            email_exists_check = self.db.unique_email_in_db(email_forgot_passwd)
+                elif not strong_password:
+                    st.error('Password should be at least 8 characters long and should contain at least one uppercase letter, one lowercase letter, one digit and one special character.')
 
-            st.markdown("###")
-            forgot_passwd_submit_button = st.form_submit_button(label = 'Get Password')
-
-            if forgot_passwd_submit_button:
-                st.write("Email exists check: ", email_exists_check)
-            #     if not email_exists_check:
-            #         st.error("Email ID not registered with us!")
-            #
-            #     if email_exists_check:
-            #         random_password = generate_random_passwd()
-            #         # send_passwd_in_email(self.auth_token, username_forgot_passwd, email_forgot_passwd, self.company_name, random_password)
-            #         # change_passwd(email_forgot_passwd, random_password)
-            #         st.success("Secure Password Sent Successfully!")
-
-    def reset_password(self) -> None:
-        """
-        Creates the reset password widget and after user authentication (email and the password shared over that email), 
-        resets the password and updates the same in the users.db file.
-        """
-        st.error("Not supported yet!")
-        with st.form("Reset Password Form"):
-            email_reset_passwd = st.text_input("Email", placeholder= 'Please enter your email')
-            email_exists_check, username_reset_passwd = self.db.unique_email_in_db(email_reset_passwd)
-
-            current_passwd = st.text_input("Temporary Password", placeholder= 'Please enter the password you received in the email')
-            # current_passwd_check = check_current_passwd(email_reset_passwd, current_passwd)
-
-            new_passwd = st.text_input("New Password", placeholder= 'Please enter a new, strong password', type = 'password')
-
-            new_passwd_1 = st.text_input("Re - Enter New Password", placeholder= 'Please re- enter the new password', type = 'password')
-
-            st.markdown("###")
-            reset_passwd_submit_button = st.form_submit_button(label = 'Reset Password')
-
-            if reset_passwd_submit_button:
-                if not email_exists_check:
-                    st.error("Email does not exist!")
-
-                # elif not current_passwd_check:
-                #     st.error("Incorrect temporary password!")
-
-                elif new_passwd != new_passwd_1:
-                    st.error("Passwords don't match!")
-            
-                if email_exists_check:
-                    # if current_passwd_check:
-                    # change_passwd(email_reset_passwd, new_passwd)
-                    st.success("Password Reset Successfully!")
-                
+                if valid_name_check and valid_email_check and unique_email_check and unique_username_check and strong_password:
+                    self.db.add_user_to_db(email=email_sign_up,
+                                   name=name_sign_up,
+                                   username=username_sign_up,
+                                   password=password_sign_up)
+                    st.success("Registration Successful!")
+                    sleep(2)
 
     def logout_widget(self) -> None:
         """
@@ -204,16 +147,20 @@ class LoginPage:
                 menu_title = 'Navigation',
                 menu_icon = 'list-columns-reverse',
                 icons = ['box-arrow-in-right', 'person-plus', 'x-circle','arrow-counterclockwise'],
-                options = ['Login', 'Create Account', 'Forgot Password?', 'Reset Password'],
+                options = ['Login', 'Create Account'],
                 styles = {
                     "container": {"padding": "5px"},
-                    "nav-link": {"font-size": "14px", "text-align": "left", "margin":"0px"}} )
+                    "nav-link": {"font-size": "14px", "text-align": "left", "margin":"0px"}},
+                key='nav'
+                )
+
         return main_page_sidebar, selected_option
 
     def build_login_ui(self):
         """
         Brings everything together, calls important functions.
         """
+
         if 'LOGGED_IN' not in st.session_state:
             st.session_state['LOGGED_IN'] = False
 
@@ -227,12 +174,6 @@ class LoginPage:
         
         if selected_option == 'Create Account':
             self.sign_up_widget()
-
-        if selected_option == 'Forgot Password?':
-            self.forgot_password()
-
-        if selected_option == 'Reset Password':
-            self.reset_password()
 
         if st.session_state['LOGGED_IN']:
             main_page_sidebar.empty()

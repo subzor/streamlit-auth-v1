@@ -2,7 +2,9 @@
 import hashlib
 import sqlite3
 import streamlit as st
-from utils import non_empty_str_check
+
+from src.utils import non_empty_str_check
+
 
 class Database:
     def __init__(self, db_name='users.db'):
