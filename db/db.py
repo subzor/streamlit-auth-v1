@@ -1,6 +1,5 @@
 
 import hashlib
-import psycopg2
 import streamlit as st
 
 from src.utils import non_empty_str_check
@@ -11,7 +10,7 @@ class Database:
         self.db_name = db_name
 
     def _connect(self):
-        return psycopg2.connect(**st.secrets.database)
+        return st.connection(**st.secrets.database)
 
     def column_exists(self, cursor, table_name, column_name):
         cursor.execute(f"PRAGMA table_info({table_name})")
@@ -33,8 +32,6 @@ class Database:
             cursor = conn.cursor()
             cursor.execute(create_table_query)
             conn.commit()
-        except psycopg2.Error as e:
-            st.error(f"Database error: {e}")
         except Exception as e:
             st.error(f"An error occurred: {e}")
 
@@ -52,7 +49,7 @@ class Database:
                 self.edit_user_role("admin", "admin")
             conn.commit()
             conn.close()
-        except psycopg2.Error as e:
+        except Exception as e:
             st.error(f"Database error: {e}")
         #
         #     conn.commit()
@@ -75,10 +72,7 @@ class Database:
             conn.commit()
             conn.close()
             return True
-        except psycopg2.IntegrityError:
-            st.error("Email or Username already exists.")
-            return False
-        except psycopg2.Error as e:
+        except Exception as e:
             st.error(f"Database error: {e}")
             return False
 
@@ -90,7 +84,7 @@ class Database:
             result = cursor.fetchone()
             conn.close()
             return result is None
-        except psycopg2.Error as e:
+        except Exception as e:
             st.error(f"Database error: {e}")
         return True
 
@@ -104,7 +98,7 @@ class Database:
             result = cursor.fetchone()
             conn.close()
             return result is None
-        except psycopg2.Error as e:
+        except Exception as e:
             st.error(f"Database error: {e}")
         return True
 
@@ -116,7 +110,7 @@ class Database:
             result = cursor.fetchone()
             conn.close()
             return result[0] if result else None
-        except psycopg2.Error as e:
+        except Exception as e:
             st.error(f"Database error: {e}")
 
     def verify_user(self, username: str, password: str):
@@ -134,7 +128,7 @@ class Database:
                 if stored_hashed_password == self.hash_password(password):
                     return True, role
             return False, None
-        except psycopg2.Error as e:
+        except Exception as e:
             st.error(f"Database error: {e}")
             return False, None
 
@@ -146,7 +140,7 @@ class Database:
             users = cursor.fetchall()
             conn.close()
             return users
-        except psycopg2.Error as e:
+        except Exception as e:
             st.error(f"Database error: {e}")
             return []
 
@@ -158,7 +152,7 @@ class Database:
             conn.commit()
             conn.close()
             return True
-        except psycopg2.Error as e:
+        except Exception as e:
             st.error(f"Database error: {e}")
             return False
 
@@ -170,7 +164,7 @@ class Database:
             conn.commit()
             conn.close()
             return True
-        except psycopg2.Error as e:
+        except Exception as e:
             st.error(f"Database error: {e}")
             return False
 
@@ -183,7 +177,7 @@ class Database:
             conn.commit()
             conn.close()
             return True
-        except psycopg2.Error as e:
+        except Exception as e:
             st.error(f"Database error: {e}")
             return False
 
@@ -195,7 +189,7 @@ class Database:
             conn.commit()
             conn.close()
             return True
-        except psycopg2.Error as e:
+        except Exception as e:
             st.error(f"Database error: {e}")
             return False
 
@@ -207,7 +201,7 @@ class Database:
             conn.commit()
             conn.close()
             return True
-        except psycopg2.Error as e:
+        except Exception as e:
             st.error(f"Database error: {e}")
             return False
 
@@ -225,7 +219,7 @@ class Database:
                 "role": result[3]
             }
             return data
-        except psycopg2.Error as e:
+        except Exception as e:
             st.error(f"Database error: {e}")
             return None
 
@@ -237,7 +231,7 @@ class Database:
             users = cursor.fetchall()
             conn.close()
             return [user[0] for user in users]
-        except psycopg2.Error as e:
+        except Exception as e:
             st.error(f"Database error: {e}")
             return []
 
