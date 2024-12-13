@@ -1,6 +1,6 @@
 
 import hashlib
-import sqlite3
+import psycopg2
 import streamlit as st
 
 from src.utils import non_empty_str_check
@@ -11,7 +11,7 @@ class Database:
         self.db_name = db_name
 
     def _connect(self):
-        return sqlite3.connect(self.db_name)
+        return psycopg2.connect(**st.secrets.database)
 
     def column_exists(self, cursor, table_name, column_name):
         cursor.execute(f"PRAGMA table_info({table_name})")
@@ -19,44 +19,48 @@ class Database:
         return any(column[1] == column_name for column in columns)
 
     def init_db(self):
-        try:
-            conn = self._connect()
-            cursor = conn.cursor()
-
-            cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='users'")
-            table_exists = cursor.fetchone() is not None
-
-            if not table_exists:
-                cursor.execute('''CREATE TABLE users (
+        # create_table_query
+        conn = self._connect()
+        create_table_query = '''CREATE TABLE IF NOT EXISTS users
+                                (id SERIAL PRIMARY KEY,
+                                email TEXT NOT NULL UNIQUE,
                                 name TEXT NOT NULL,
-                                email TEXT UNIQUE,
-                                username TEXT PRIMARY KEY,
+                                username TEXT NOT NULL UNIQUE,
                                 password TEXT NOT NULL,
-                                role TEXT DEFAULT 'user')''')
-            else:
-                if not self.column_exists(cursor, 'users', 'role'):
-                    cursor.execute("ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'user'")
-                    conn.commit()
+                                role TEXT NOT NULL);'''
 
-            cursor.execute("SELECT username FROM users WHERE username = ?", ("admin",))
+        try:
+            cursor = conn.cursor()
+            cursor.execute(create_table_query)
+            conn.commit()
+        except psycopg2.Error as e:
+            st.error(f"Database error: {e}")
+        except Exception as e:
+            st.error(f"An error occurred: {e}")
+
+        try:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM users WHERE username = 'admin'")
             admin_exists = cursor.fetchone()
-
             if not admin_exists:
                 admin_email = "admin@admin.pl"
                 admin_name = "Admin"
                 admin_username = "admin"
-                admin_password = self.hash_password("admin123")
-                cursor.execute("INSERT INTO users (email, name, username, password, role) VALUES (?, ?, ?, ?, ?)",
-                             (admin_email, admin_name, admin_username, admin_password, "admin"))
+                admin_password = self.hash_password("admin123@")
+                self.add_user_to_db(admin_email, admin_name, admin_username, admin_password, role='admin')
             else:
-                cursor.execute("UPDATE users SET role = ? WHERE username = ?", ("admin", "admin"))
-
+                self.edit_user_role("admin", "admin")
             conn.commit()
             conn.close()
-        except sqlite3.Error as e:
+        except psycopg2.Error as e:
             st.error(f"Database error: {e}")
-        except Exception as e:
-            st.error(f"An error occurred: {e}")
+        #
+        #     conn.commit()
+        #     conn.close()
+        # except psycopg2.Error as e:
+        #     st.error(f"Database error: {e}")
+        # except Exception as e:
+        #     st.error(f"An error occurred: {e}")
 
     def hash_password(self, password):
         return hashlib.sha256(password.encode()).hexdigest()
@@ -66,15 +70,15 @@ class Database:
         try:
             conn = self._connect()
             cursor = conn.cursor()
-            cursor.execute("INSERT INTO users (email, name, username, password, role) VALUES (?, ?, ?, ?, ?)",
-                          (email, name, username, hashed_pwd, role))
+            cursor.execute("INSERT INTO users (email, name, username, password, role) VALUES (%s, %s, %s, %s, %s)",
+                    (email, name, username, hashed_pwd, role))
             conn.commit()
             conn.close()
             return True
-        except sqlite3.IntegrityError:
+        except psycopg2.IntegrityError:
             st.error("Email or Username already exists.")
             return False
-        except sqlite3.Error as e:
+        except psycopg2.Error as e:
             st.error(f"Database error: {e}")
             return False
 
@@ -82,11 +86,11 @@ class Database:
         try:
             conn = self._connect()
             cursor = conn.cursor()
-            cursor.execute("SELECT email FROM users WHERE email = ?", (email,))
+            cursor.execute("SELECT email FROM users WHERE email = %s", (email,))
             result = cursor.fetchone()
             conn.close()
             return result is None
-        except sqlite3.Error as e:
+        except psycopg2.Error as e:
             st.error(f"Database error: {e}")
         return True
 
@@ -96,11 +100,11 @@ class Database:
         try:
             conn = self._connect()
             cursor = conn.cursor()
-            cursor.execute("SELECT username FROM users WHERE username = ?", (username,))
+            cursor.execute("SELECT username FROM users WHERE username = %s", (username,))
             result = cursor.fetchone()
             conn.close()
             return result is None
-        except sqlite3.Error as e:
+        except psycopg2.Error as e:
             st.error(f"Database error: {e}")
         return True
 
@@ -108,27 +112,29 @@ class Database:
         try:
             conn = self._connect()
             cursor = conn.cursor()
-            cursor.execute("SELECT role FROM users WHERE username = ?", (username,))
+            cursor.execute("SELECT role FROM users WHERE username = %s", (username,))
             result = cursor.fetchone()
             conn.close()
             return result[0] if result else None
-        except sqlite3.Error as e:
+        except psycopg2.Error as e:
             st.error(f"Database error: {e}")
 
     def verify_user(self, username: str, password: str):
         try:
             conn = self._connect()
             cursor = conn.cursor()
-            cursor.execute("SELECT password, role FROM users WHERE username = ?", (username,))
+            cursor.execute("SELECT password, role FROM users WHERE username = %s", (username,))
             result = cursor.fetchone()
             conn.close()
-
+            print(password)
+            print(result)
+            print(self.hash_password(password))
             if result:
                 stored_hashed_password, role = result
                 if stored_hashed_password == self.hash_password(password):
                     return True, role
             return False, None
-        except sqlite3.Error as e:
+        except psycopg2.Error as e:
             st.error(f"Database error: {e}")
             return False, None
 
@@ -140,7 +146,7 @@ class Database:
             users = cursor.fetchall()
             conn.close()
             return users
-        except sqlite3.Error as e:
+        except psycopg2.Error as e:
             st.error(f"Database error: {e}")
             return []
 
@@ -148,11 +154,11 @@ class Database:
         try:
             conn = self._connect()
             cursor = conn.cursor()
-            cursor.execute("UPDATE users SET role = ? WHERE username = ?", (role, username))
+            cursor.execute("UPDATE users SET role = %s WHERE username = %s", (role, username))
             conn.commit()
             conn.close()
             return True
-        except sqlite3.Error as e:
+        except psycopg2.Error as e:
             st.error(f"Database error: {e}")
             return False
 
@@ -160,11 +166,11 @@ class Database:
         try:
             conn = self._connect()
             cursor = conn.cursor()
-            cursor.execute("DELETE FROM users WHERE username = ?", (username,))
+            cursor.execute("DELETE FROM users WHERE username = %s", (username,))
             conn.commit()
             conn.close()
             return True
-        except sqlite3.Error as e:
+        except psycopg2.Error as e:
             st.error(f"Database error: {e}")
             return False
 
@@ -173,11 +179,11 @@ class Database:
         try:
             conn = self._connect()
             cursor = conn.cursor()
-            cursor.execute("UPDATE users SET password = ? WHERE username = ?", (hashed_pwd, username))
+            cursor.execute("UPDATE users SET password = %s WHERE username = %s", (hashed_pwd, username))
             conn.commit()
             conn.close()
             return True
-        except sqlite3.Error as e:
+        except psycopg2.Error as e:
             st.error(f"Database error: {e}")
             return False
 
@@ -185,11 +191,11 @@ class Database:
         try:
             conn = self._connect()
             cursor = conn.cursor()
-            cursor.execute("UPDATE users SET email = ? WHERE username = ?", (email, username))
+            cursor.execute("UPDATE users SET email = %s WHERE username = %s", (email, username))
             conn.commit()
             conn.close()
             return True
-        except sqlite3.Error as e:
+        except psycopg2.Error as e:
             st.error(f"Database error: {e}")
             return False
 
@@ -197,11 +203,11 @@ class Database:
         try:
             conn = self._connect()
             cursor = conn.cursor()
-            cursor.execute("UPDATE users SET name = ? WHERE username = ?", (name, username))
+            cursor.execute("UPDATE users SET name = %s WHERE username = %s", (name, username))
             conn.commit()
             conn.close()
             return True
-        except sqlite3.Error as e:
+        except psycopg2.Error as e:
             st.error(f"Database error: {e}")
             return False
 
@@ -209,7 +215,7 @@ class Database:
         try:
             conn = self._connect()
             cursor = conn.cursor()
-            cursor.execute("SELECT email, username, name, role FROM users WHERE username = ?", (username,))
+            cursor.execute("SELECT email, username, name, role FROM users WHERE username = %s", (username,))
             result = cursor.fetchone()
             conn.close()
             data = {
@@ -219,7 +225,7 @@ class Database:
                 "role": result[3]
             }
             return data
-        except sqlite3.Error as e:
+        except psycopg2.Error as e:
             st.error(f"Database error: {e}")
             return None
 
@@ -231,7 +237,7 @@ class Database:
             users = cursor.fetchall()
             conn.close()
             return [user[0] for user in users]
-        except sqlite3.Error as e:
+        except psycopg2.Error as e:
             st.error(f"Database error: {e}")
             return []
 
