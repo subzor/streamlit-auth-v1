@@ -6,7 +6,7 @@ make_sidebar()
 
 db = Database()
 user_name = st.session_state.get("LOGGED_USER")
-user_data = db.get_user_details(user_name)
+user_details = db.get_user_details(user_name)
 
 st.write(
     f"""
@@ -22,6 +22,6 @@ Your user data:
 
 """
 )
-for s, d in user_data.items():
+for s, d in user_details.__dict__.items():
     st.write(f"{s.capitalize()}: {d} ")
 

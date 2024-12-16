@@ -5,6 +5,7 @@ from db.db import Database
 import streamlit as st
 
 from src.enums import UserRoleType
+from src.models import UserDetails
 
 
 class Forms:
@@ -12,7 +13,7 @@ class Forms:
     def __init__(self):
         self.db = Database()
         self.user_name = st.session_state.get("LOGGED_USER")
-        self.user_data = self.db.get_user_details(self.user_name)
+        self.user_datails: UserDetails = self.db.get_user_details(self.user_name)
         self.users_data = self.db.get_all_users()
         self.users_copy = self.users_data.copy()
         self.users_copy.remove(self.user_name)
@@ -52,7 +53,7 @@ class SettingsForms(Forms):
     def change_name_form(self):
         with st.form("Change name", clear_on_submit=True):
             st.write("")
-            st.write(f"Old name: {self.user_data['name']}")
+            st.write(f"Old name: {self.user_datails.name}")
             new_name = st.text_input("New name", value="")
             password = st.text_input("Password", type="password", value="")
 
@@ -75,7 +76,7 @@ class SettingsForms(Forms):
     def change_email_form(self):
         with st.form("Change email", clear_on_submit=True):
             st.write("")
-            st.write(f"Old email: {self.user_data['email']}")
+            st.write(f"Old email: {self.user_datails.email}")
             new_email = st.text_input("New email", value="")
             password = st.text_input("Password", type="password", value="")
 

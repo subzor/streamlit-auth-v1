@@ -16,7 +16,8 @@ def admin_panel():
     admin_forms = AdminForms()
     st.title("User Data")
     users_data = db.fetch_all_users_with_passwords()
-    df = pd.DataFrame(users_data, columns=["Email", "Name", "Username", "Password", "Role"])
+
+    df = pd.DataFrame.from_records([user.__dict__ for user in users_data])
     st.dataframe(df)
     st.warning("Warning, superuser mode")
     if st.checkbox("I accept responsibility and understand this mode can be used to initialise and make changes to the authentication database"):

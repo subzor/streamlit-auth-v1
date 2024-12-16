@@ -81,7 +81,7 @@ class LoginPage:
 
             email_sign_up = st.text_input("Email *", placeholder = 'Please enter your email')
             valid_email_check = check_valid_email(email_sign_up)
-            unique_email_check = self.db.unique_email_in_db(email_sign_up)
+            email_exist = self.db.check_email_in_db(email_sign_up)
             
             username_sign_up = st.text_input("Username *", placeholder = 'Enter a unique username')
             unique_username_check = self.db.check_user_in_db(username_sign_up)
@@ -98,25 +98,24 @@ class LoginPage:
                 elif not valid_email_check:
                     st.error("Please enter a valid Email!")
                 
-                elif not unique_email_check:
+                elif email_exist:
                     st.error("Email already exists!")
 
                 elif unique_username_check is None:
                     st.error('Please enter a non - empty Username!')
 
-                elif not unique_username_check:
-                    st.error(f'Sorry, username {username_sign_up} already exists!')
+                elif unique_username_check:
+                    st.error(f'Sorry, username {username_sign_up!r} already exists!')
 
                 elif not strong_password:
                     st.error('Password should be at least 8 characters long and should contain at least one uppercase letter, one lowercase letter, one digit and one special character.')
 
-                if valid_name_check and valid_email_check and unique_email_check and unique_username_check and strong_password:
+                if valid_name_check and valid_email_check and (not email_exist) and (not unique_username_check) and strong_password:
                     self.db.add_user_to_db(email=email_sign_up,
                                    name=name_sign_up,
                                    username=username_sign_up,
                                    password=password_sign_up)
                     st.success("Registration Successful!")
-                    sleep(2)
 
     def logout_widget(self) -> None:
         """
