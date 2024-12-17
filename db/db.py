@@ -102,7 +102,7 @@ class Database:
             with self.connection.cursor() as cursor:
                 cursor.execute(f"SELECT role FROM users WHERE username = '{username}'")
                 result = cursor.fetchone()
-            return result if result else None
+            return result[0] if result else None
         except psycopg2.Error as e:
             st.error(f"get_user_role {e}")
 
