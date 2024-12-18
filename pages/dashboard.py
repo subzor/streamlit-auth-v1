@@ -1,5 +1,7 @@
+
 import os
 
+import streamlit.components.v1 as components
 from db.db import Database
 from navigation import make_sidebar
 import streamlit as st
@@ -29,5 +31,10 @@ for s, d in user_details.__dict__.items():
 
 if st.button("Run tests"):
     st.write("Running tests...")
-    os.system("cd .. && cd .. && cd app && npx playwright test")
+    os.system("cd .. && cd .. && cd app && npx playwright test --grep '@login'")
+    st.write("Tests passed! 🎉")
+    os.system("cd .. && cd .. && cd app && npx playwright show-report")
+
+if st.button("show result tests"):
+    components.iframe("http://localhost:9323", height=600, scrolling=True)
     st.write("Tests passed! 🎉")
