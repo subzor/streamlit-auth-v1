@@ -29,5 +29,5 @@ for s, d in user_details.__dict__.items():
 
 if st.button("Run tests"):
     st.write("Running tests...")
-    os.system("cd .. && cd.. && npx playwright test")
+    os.system("cd .. && cd .. && npx playwright test")
     st.write("Tests passed! 🎉")
