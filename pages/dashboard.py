@@ -29,12 +29,18 @@ Your user data:
 for s, d in user_details.__dict__.items():
     st.write(f"{s.capitalize()}: {d} ")
 
+command = st.text_input("grep command")
+
+
+
 if st.button("Run tests"):
     st.write("Running tests...")
-    os.system("cd .. && cd .. && cd app && npx playwright test --grep '@login'")
+    os.system(f"cd .. && cd .. && cd app && npx playwright test --grep '{command}'")
     st.write("Tests passed! 🎉")
-    os.system("cd .. && cd .. && cd app && npx playwright show-report")
+
+port = st.text_input("port")
 
 if st.button("show result tests"):
+    os.system(f"cd .. && cd .. && cd app && npx playwright show-report --port '{port}'")
     components.iframe("http://localhost:9323", height=600, scrolling=True)
     st.write("Tests passed! 🎉")
