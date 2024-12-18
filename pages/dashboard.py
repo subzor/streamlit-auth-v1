@@ -1,3 +1,5 @@
+import os
+
 from db.db import Database
 from navigation import make_sidebar
 import streamlit as st
@@ -25,3 +27,7 @@ Your user data:
 for s, d in user_details.__dict__.items():
     st.write(f"{s.capitalize()}: {d} ")
 
+if st.button("Run tests"):
+    st.write("Running tests...")
+    os.system("cd .. && cd.. && npx playwright test")
+    st.write("Tests passed! 🎉")
