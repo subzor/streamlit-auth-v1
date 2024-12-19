@@ -1,7 +1,11 @@
-
+import io
 import os
 
 import streamlit.components.v1 as components
+from PIL import Image
+
+from backend.amazon import AmazonScraper
+from backend.models.book import Book
 from db.db import Database
 from navigation import make_sidebar
 import streamlit as st
@@ -29,18 +33,36 @@ Your user data:
 for s, d in user_details.__dict__.items():
     st.write(f"{s.capitalize()}: {d} ")
 
-command = st.text_input("grep command")
+
+st.write("")
+st.write("")
+st.write("")
+st.write("")
+
+isbn = st.text_input("Enter ISBN")
+
+if st.button("Get books"):
+    amazon: [Book] = AmazonScraper(isbn).get_books()
+
+    for index, book in enumerate(amazon):
+        book.trim_()
+        st.image(Image.open(io.BytesIO(book.image.image)), caption="Book cover")
+        st.text_input(f"Title{index}", book.title)
+        st.text_input(f"Author{index}", book.author)
+        st.text_input(f"Name{index}", book.name)
+        st.text_input(f"Price{index}", book.price)
+        st.text_input(f"Currency{index}", book.currency)
+        st.text_input(f"Sale price{index}", book.sale_price)
+        st.text_input(f"Description{index}", book.description)
+        st.text_input(f"Publisher{index}", book.publisher)
+        st.text_input(f"Publish year{index}", book.publish_year)
+        st.text_input(f"Pages{index}", book.pages)
+        st.text_input(f"Category{index}", book.category)
+        st.text_input(f"Binding{index}", book.binding)
+        st.write("")
 
 
 
-if st.button("Run tests"):
-    st.write("Running tests...")
-    os.system(f"cd .. && cd .. && cd app && npx playwright test --grep '{command}'")
-    st.write("Tests passed! 🎉")
 
-port = st.text_input("port")
 
-if st.button("show result tests"):
-    os.system(f"cd .. && cd .. && cd app && npx playwright show-report --port '{port}'")
-    components.iframe("http://localhost:9323", height=600, scrolling=True)
-    st.write("Tests passed! 🎉")
+
