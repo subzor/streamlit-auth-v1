@@ -1,3 +1,4 @@
+import os
 from time import sleep
 
 import streamlit as st
@@ -5,7 +6,8 @@ from streamlit_option_menu import option_menu
 from streamlit_cookies_manager import EncryptedCookieManager
 
 from db.db import Database
-from src.utils import check_valid_name, check_valid_email, validate_password
+from src.consts import Paths
+from src.utils import check_valid_name, check_valid_email, validate_password, is_secrets_toml_file_exists
 
 
 class LoginPage:
@@ -20,7 +22,7 @@ class LoginPage:
         1. logout_button_name : The logout button name.
         """
         self.logout_button_name = logout_button_name
-        self.db = Database()
+        self.db = st.session_state.get("DB")
 
         self.cookies = EncryptedCookieManager(
         prefix="streamlit_login_ui_yummy_cookies",
@@ -179,5 +181,103 @@ class LoginPage:
 
         return st.session_state['LOGGED_IN']
 
+
+class SecretsPage:
+
+
+    """
+    Builds the UI for the Secrets page.
+    """
+    def __init__(self):
+        self.secrets_from_env: dict[str, str] | None = None
+        self._check_env_vars()
+
+    def _check_env_vars(self):
+        """
+        Checks if the environment variables for database are set.
+        """
+        host = os.getenv("POSTGRESQL_HOST")
+        port = os.getenv("POSTGRESQL_PORT")
+        db_name = os.getenv("POSTGRESQL_DBNAME")
+        username = os.getenv("POSTGRESQL_USERNAME")
+        password = os.getenv("POSTGRESQL_PASSWORD")
+
+        if not all([host, port, db_name, username, password]):
+            return
+        self.secrets_from_env = {
+            "host": host,
+            "port": port,
+            "database": db_name,
+            "username": username,
+            "password": password
+        }
+
+    def _save_secrets_to_toml(self):
+        """
+        Saves the secrets to a toml file.
+        """
+        with open(Paths.SECRETS_FILE, "w") as f:
+            f.write("[connections.postgresql]\n")
+            for key, value in self.secrets_from_env.items():
+                f.write(f"{key}='{value}'\n")
+        st.rerun()
+
+    def _show_secrets_forms(self,
+                            host: str | None = None,
+                            port: str | None = None,
+                            database: str | None = None,
+                            username: str | None= None,
+                            password: str | None= None):
+        """
+        Shows the secrets' forms.
+        """
+        host = st.text_input("Host", value=host)
+        port = st.text_input("Port", value=port)
+        database = st.text_input("Database Name", value=database)
+        username = st.text_input("Username", value=username)
+        password = st.text_input("Password", value=password)
+        if st.button("Save Secrets"):
+            self.secrets_from_env = {
+                "host": host,
+                "port": port,
+                "database": database,
+                "username": username,
+                "password": password
+            }
+            self._save_secrets_to_toml()
+
+    def _init_secrets_widget(self):
+        """
+        Creates the secrets' widget.
+        """
+        st.warning("This page occurs only once. Please enter the database credentials to access the secrets.")
+        if self.secrets_from_env:
+            st.write("Database credentials was found in the environment variables.")
+            if st.checkbox("Show Secrets"):
+                self._show_secrets_forms(**self.secrets_from_env)
+
+    def _get_secrets_from_toml(self):
+        """
+        Gets the secrets from the toml file.
+        """
+        try:
+            secrets = st.secrets.to_dict().get("connections", {}).get("postgresql", {})
+        except AttributeError as e:
+            st.error("Please set the secrets in the environment variables.")
+            self._show_secrets_forms()
+            return
+        self._show_secrets_forms(**secrets)
+
+    def secrets_widget(self):
+        """
+        Brings everything together.
+        """
+        if is_secrets_toml_file_exists():
+            self._get_secrets_from_toml()
+        elif self.secrets_from_env:
+            self._init_secrets_widget()
+        else:
+            st.write("Please enter the database credentials to access the secrets.")
+            self._show_secrets_forms()
 
 

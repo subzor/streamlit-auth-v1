@@ -1,23 +1,38 @@
+import os
 
 import streamlit as st
 
 from db.db import Database
 from navigation import make_sidebar
-from frontend.widgets import LoginPage
+from frontend.widgets import LoginPage, SecretsPage
+from dotenv import load_dotenv
 
-db = Database()
-db.init_db()
+from src.utils import is_secrets_toml_file_exists
 
-st.title("Welcome to Sub Corp")
+load_dotenv()
 
-login_page = LoginPage(logout_button_name ='Logout')
+if is_secrets_toml_file_exists():
+    db = Database()
 
-login_page.build_login_ui()
+    if db.config_check:
+        db_connection = db.connect()
 
-st.session_state["LOGIN_OBJ"] = login_page
+        if db_connection:
+            db.init_db()
+            st.session_state["DB"] = db
+            st.title("Welcome to Sub Corp")
 
-make_sidebar()
+            login_page = LoginPage(logout_button_name ='Logout')
 
+            login_page.build_login_ui()
+
+            st.session_state["LOGIN_OBJ"] = login_page
+
+            make_sidebar()
+
+else:
+    secrets_page = SecretsPage()
+    secrets_page.secrets_widget()
 
 
 

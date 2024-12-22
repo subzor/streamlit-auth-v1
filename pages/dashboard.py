@@ -1,12 +1,12 @@
-from db.db import Database
+
 from navigation import make_sidebar
 import streamlit as st
 
+from db.db import get_logged_user_details
+
 make_sidebar()
 
-db = Database()
-user_name = st.session_state.get("LOGGED_USER")
-user_details = db.get_user_details(user_name)
+user_details = get_logged_user_details()
 
 st.write(
     f"""

@@ -1,7 +1,7 @@
 
 from time import sleep
 
-from db.db import Database
+from db.db import Database, get_logged_user_details
 import streamlit as st
 
 from src.enums import UserRoleType
@@ -11,9 +11,9 @@ from src.models import UserDetails
 class Forms:
 
     def __init__(self):
-        self.db = Database()
+        self.db = st.session_state.get("DB")
         self.user_name = st.session_state.get("LOGGED_USER")
-        self.user_datails: UserDetails = self.db.get_user_details(self.user_name)
+        self.user_details: UserDetails = get_logged_user_details()
         self.users_data = self.db.get_all_users()
         self.users_copy = self.users_data.copy()
         self.users_copy.remove(self.user_name)
@@ -53,7 +53,7 @@ class SettingsForms(Forms):
     def change_name_form(self):
         with st.form("Change name", clear_on_submit=True):
             st.write("")
-            st.write(f"Old name: {self.user_datails.name}")
+            st.write(f"Old name: {self.user_details.name}")
             new_name = st.text_input("New name", value="")
             password = st.text_input("Password", type="password", value="")
 
@@ -76,7 +76,7 @@ class SettingsForms(Forms):
     def change_email_form(self):
         with st.form("Change email", clear_on_submit=True):
             st.write("")
-            st.write(f"Old email: {self.user_datails.email}")
+            st.write(f"Old email: {self.user_details.email}")
             new_email = st.text_input("New email", value="")
             password = st.text_input("Password", type="password", value="")
 
@@ -156,6 +156,22 @@ class AdminForms(Forms):
                     st.error("Error deleting user")
             else:
                 st.warning("Please confirm and select a user to delete")
+
+
+class SecretsForms(Forms):
+
+    def change_secret(self):
+        st.write("Change secret")
+        new_secret = st.text_input("New secret", type="password")
+        if st.button("Change secret"):
+            if new_secret != "":
+                response = self.db.update_secret(self.user_name, new_secret)
+                if response:
+                    st.success("Secret changed successfully! :sunglasses:")
+                else:
+                    st.error("Error changing secret")
+            else:
+                st.warning("Secret cannot be empty")
 
 
 

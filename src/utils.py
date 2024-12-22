@@ -1,5 +1,8 @@
+import os
 import re
 import secrets
+
+from src.consts import Paths
 
 
 def check_valid_name(name_sign_up: str) -> bool:
@@ -102,7 +105,11 @@ def validate_password(password):
     return has_lower and has_upper and has_digit and has_symbol
 
 
-
+def is_secrets_toml_file_exists() -> bool:
+    """
+    Checks if the secrets.toml file exists in the current directory.
+    """
+    return os.path.exists(Paths.SECRETS_FILE)
 
 
 

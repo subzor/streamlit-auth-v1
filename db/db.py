@@ -1,17 +1,54 @@
 import hashlib
-import streamlit as st
+import os
 
+import streamlit as st
+from streamlit.runtime.secrets import Secrets
+
+from src.consts import Paths
 from src.models import UserDetails
 from src.utils import non_empty_str_check
 import psycopg2
 
 
 class Database:
+    connection: psycopg2.extensions.connection
+
     def __init__(self):
-        _config = (st.secrets.connections["postgresql"])
-        self.connection_string = (f"host='{_config.host}' dbname='{_config.database}' "
-                                  f"user='{_config.username}' password='{_config.password}'")
-        self.connection = psycopg2.connect(self.connection_string)
+        self.config = self._get_secrets_config()
+        self.config_check = self._check_config()
+        if self.config_check:
+            self.connection_string = (f"host='{self.config.host}' dbname='{self.config.database}' "
+                                      f"user='{self.config.username}' password='{self.config.password}'")
+
+    def connect(self):
+        try:
+            self.connection = psycopg2.connect(self.connection_string)
+            return True
+        except psycopg2.Error:
+            st.error(f"Connection error")
+            st.warning("Please check your secrets.")
+            return False
+
+    def _check_config(self) -> bool:
+        if not (self.config.host and self.config.database and self.config.username and self.config.password):
+            st.error("Missing secrets.")
+            return False
+        return True
+
+    @staticmethod
+    def _get_secrets_config():
+        try:
+            _config = st.secrets.connections["postgresql"]
+        except AttributeError:
+            st.secrets = Secrets()
+            st.error("Secrets file has incorrect format. Read the README.md file for more information.")
+            if st.button("Clear secrets file? This will delete all secrets"):
+                os.remove(Paths.SECRETS_FILE)
+                st.rerun()
+            return None
+        return _config
+
+
 
     @staticmethod
     def hash_password(password) -> str:
@@ -206,3 +243,14 @@ class Database:
             st.error(f"get_all_users {e}")
             return []
 
+
+def get_logged_user_details():
+    """
+    Returns the logged in user's details.
+    """
+    db = st.session_state.get("DB")
+    try:
+        details = db.get_user_details(st.session_state.get("LOGGED_USER"))
+        return details
+    except AttributeError:
+        pass
