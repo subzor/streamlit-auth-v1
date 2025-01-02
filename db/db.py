@@ -17,7 +17,7 @@ class Database:
         self.config = self._get_secrets_config()
         self.config_check = self._check_config()
         if self.config_check:
-            self.connection_string = (f"host='{self.config.host}' dbname='{self.config.database}' "
+            self.connection_string = (f"host='{self.config.host}' port='{self.config.port}' dbname='{self.config.database}' "
                                       f"user='{self.config.username}' password='{self.config.password}'")
 
     def connect(self):
@@ -30,7 +30,7 @@ class Database:
             return False
 
     def _check_config(self) -> bool:
-        if not (self.config.host and self.config.database and self.config.username and self.config.password):
+        if not (self.config.host and self.config.port and self.config.database and self.config.username and self.config.password):
             st.error("Missing secrets.")
             return False
         return True
