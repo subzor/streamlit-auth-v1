@@ -29,6 +29,10 @@ if is_secrets_toml_file_exists():
             st.session_state["LOGIN_OBJ"] = login_page
 
             make_sidebar()
+    else:
+        st.error("Please check your secrets.")
+        secrets_page = SecretsPage()
+        secrets_page.secrets_widget()
 
 else:
     secrets_page = SecretsPage()
