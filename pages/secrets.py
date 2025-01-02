@@ -12,12 +12,6 @@ st.title(f"""
 
 secrets_forms = SecretsPage()
 
-print(os.getenv("POSTGRESQL_DBNAME"))
-print(os.getenv("POSTGRESQL_USER"))
-print(os.getenv("POSTGRESQL_PASSWORD"))
-print(os.getenv("POSTGRESQL_HOST"))
-print(os.getenv("POSTGRESQL_PORT"))
-
 if st.checkbox("Show secrets"):
     secrets_forms.secrets_widget()
 
