@@ -16,7 +16,6 @@ if is_secrets_toml_file_exists():
 
     if db.config_check:
         db_connection = db.connect()
-
         if db_connection:
             db.init_db()
             st.session_state["DB"] = db
@@ -29,13 +28,10 @@ if is_secrets_toml_file_exists():
             st.session_state["LOGIN_OBJ"] = login_page
 
             make_sidebar()
-    else:
-        st.error("Please check your secrets.")
-        secrets_page = SecretsPage()
-        secrets_page.secrets_widget()
 
 else:
     secrets_page = SecretsPage()
+    st.write("streamlit app is not configured properly")
     secrets_page.secrets_widget()
 
 

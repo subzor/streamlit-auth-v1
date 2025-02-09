@@ -4,6 +4,7 @@ import os
 import streamlit as st
 from streamlit.runtime.secrets import Secrets
 
+from frontend.widgets import SecretsPage
 from src.consts import Paths
 from src.models import UserDetails
 from src.utils import non_empty_str_check
@@ -14,24 +15,31 @@ class Database:
     connection: psycopg2.extensions.connection
 
     def __init__(self):
+        self.secrets_page = SecretsPage()
         self.config = self._get_secrets_config()
-        self.config_check = self._check_config()
-        if self.config_check:
-            self.connection_string = (f"host='{self.config.host}' port='{self.config.port}' dbname='{self.config.database}' "
-                                      f"user='{self.config.username}' password='{self.config.password}'")
+        self.config_check = False
+        if self.config:
+            self.config_check = self._check_config()
+            if self.config_check:
+                self.connection_string = (f"host='{self.config.host}' port='{self.config.port}' dbname='{self.config.database}' "
+                                          f"user='{self.config.username}' password='{self.config.password}'")
 
     def connect(self):
         try:
             self.connection = psycopg2.connect(self.connection_string)
             return True
         except psycopg2.Error:
-            st.error(f"Connection error")
-            st.warning("Please check your secrets.")
+            st.error(f"Connection error. Please check your secrets.")
+            self.secrets_page.secrets_widget()
             return False
 
     def _check_config(self) -> bool:
-        if not (self.config.host and self.config.port and self.config.database and self.config.username and self.config.password):
-            st.error("Missing secrets.")
+        try:
+            if not (self.config.host and self.config.port and self.config.database and self.config.username and self.config.password):
+                return False
+        except AttributeError:
+            st.error("Missing secrets. Read the README.md file for more information.")
+            self.secrets_page.secrets_widget()
             return False
         return True
 
@@ -41,7 +49,7 @@ class Database:
             _config = st.secrets.connections["postgresql"]
         except AttributeError:
             st.secrets = Secrets()
-            st.error("Secrets file has incorrect format. Read the README.md file for more information.")
+            st.error("The secrets file structure is incorrect. Read the README.md file for more information.")
             if st.button("Clear secrets file? This will delete all secrets"):
                 os.remove(Paths.SECRETS_FILE)
                 st.rerun()

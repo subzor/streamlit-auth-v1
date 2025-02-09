@@ -1,11 +1,9 @@
 import os
-from time import sleep
 
 import streamlit as st
 from streamlit_option_menu import option_menu
 from streamlit_cookies_manager import EncryptedCookieManager
 
-from db.db import Database
 from src.consts import Paths
 from src.utils import check_valid_name, check_valid_email, validate_password, is_secrets_toml_file_exists
 
@@ -270,7 +268,7 @@ class SecretsPage:
 
     def secrets_widget(self):
         """
-        Brings everything together.
+        Show the secrets widget on start page.
         """
         if is_secrets_toml_file_exists():
             self._get_secrets_from_toml()
