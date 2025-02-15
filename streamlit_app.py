@@ -11,7 +11,7 @@ from src.utils import is_secrets_toml_file_exists
 
 load_dotenv()
 
-if is_secrets_toml_file_exists():
+def main():
     db = Database()
 
     if db.config_check:
@@ -29,10 +29,11 @@ if is_secrets_toml_file_exists():
 
             make_sidebar()
 
+if is_secrets_toml_file_exists():
+    main()
 else:
-    secrets_page = SecretsPage()
+    secrets_page = SecretsPage().secrets_widget()
     st.write("streamlit app is not configured properly")
-    secrets_page.secrets_widget()
 
 
 

@@ -2,8 +2,8 @@ import os
 
 import streamlit as st
 from streamlit_option_menu import option_menu
-from streamlit_cookies_manager import EncryptedCookieManager
 
+from cookie_manager.encrypted_cookie_manager import EncryptedCookieManager
 from src.consts import Paths
 from src.utils import check_valid_name, check_valid_email, validate_password, is_secrets_toml_file_exists
 
