@@ -29,6 +29,7 @@ def make_sidebar():
             st.page_link("pages/settings.py", label="Settings", icon="🔒")
             if st.session_state.get("ROLE") == "admin":
                 st.page_link("pages/admin_panel.py", label="Admin Panel", icon="🔓")
+                st.page_link("pages/secrets.py", label="Secrets", icon="🏥")
 
             st.write("")
             st.write("")

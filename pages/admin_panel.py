@@ -5,11 +5,6 @@ from frontend.forms import AdminForms
 from navigation import make_sidebar
 import streamlit as st
 
-make_sidebar()
-
-db = Database()
-user_name = st.session_state.get("LOGGED_USER")
-user_data = db.get_user_details(user_name)
 
 
 def admin_panel():
@@ -40,11 +35,10 @@ def admin_panel():
         admin_forms.delete_user()
 
 
+make_sidebar()
 
+db = st.session_state.get("DB")
 
-
-
-
-if st.session_state.get('ROLE') == 'admin':
+if st.session_state.get('ROLE') == 'admin' and db.config_check:
     admin_panel()
 
